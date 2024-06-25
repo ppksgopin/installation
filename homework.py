@@ -45,8 +45,17 @@ async def inspect_user_by_id(user_id: int = Path(gt = 0)):
 
 @app.post("/createuser", status_code = status.HTTP_201_CREATED)
 async def create_user(user_request: UserRequest):
-    new_user = Users(**user_request.model_dump())
-    user[list(user)[-1] + 1] = new_user
+    create_flag = False
+    try:
+        new_user = Users(**user_request.model_dump())
+        user[list(user)[-1] + 1] = new_user
+        create_flag = True
+    except:
+        raise HTTPException(status_code=500, detail='Add new user failed.')
+
+    if create_flag:
+        raise  HTTPException(status_code = 400, detail='Wrong input parameters.')
+
 
 
 @app.put("/updateuser/{user_id}", status_code = status.HTTP_200_OK)
@@ -74,5 +83,3 @@ async def delete_user(user_id: int = Path(gt = 0) ):
             break
     if not user_deleted:
         raise HTTPException(status_code = 404, detail = 'User not exist.')
-
-
