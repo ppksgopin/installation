@@ -26,10 +26,9 @@ class UserRequest(BaseModel):
         }
 
 user = {
-    1:{"name": "Wanyu_Lee", "email": "Wanyu_Lee@pegatroncorp.com"},
-    2:{"name": "Sandy1_Zeng", "email": "Sandy1_Zeng@pegatroncorp.com"}
+    1:{"name": "Wanyu_Lee", "email": "Wanyu_Lee@pegatroncorp.com", "activate": True},
+    2:{"name": "Sandy1_Zeng", "email": "Sandy1_Zeng@pegatroncorp.com", "activate": True}
 }
-
 
 def checkMail(email):
     regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
@@ -38,76 +37,72 @@ def checkMail(email):
     else:
         return False
 
-def checkDuplicate(inputUser):
+def checkExist(name, mail):
+    checkFlag = False
+    for i in user:
+        if (user[i]["name"] == name) or (user[i]["email"] == mail):
+            checkFlag = True
+            break
 
-	
+    return not checkFlag
 
-@app.get("/getAll")
-async def getAllUser():
+
+
+@app.get("/user/showAll", status_code = status.HTTP_200_OK)
+async def showall():
     return user
 
-@app.get("/getuser/{user_id}", status_code = status.HTTP_200_OK)
+@app.get("/user/{user_id}", status_code = status.HTTP_200_OK)
 async def inspect_user_by_id(user_id: int = Path(gt = 0)):
-    info_get = False
-    for i in user:
-        if i == user_id:
-            return user[user_id]
-            info_get = True
-            break
-    if not info_get:
-        raise HTTPException(status_code = 404, detail = 'User not exist.')
+    existFlag = (user_id in user) and (user[user_id]["activate"] == True)
+
+    if existFlag:
+        return user[user_id]
     else:
-        raise HTTPException(status_code = 400, detail = 'Please input user id.')
+        raise HTTPException(status_code = 404, detail = 'User not exist.')
 
-@app.post("/createuser", status_code = status.HTTP_201_CREATED)
+@app.post("/user", status_code = status.HTTP_201_CREATED)
 async def create_user(user_request: UserRequest):
-    new_user = Users(**user_request.model_dump())
-    create_flag = False
-
     msg = {}
-    mailFlag = checkMail(new_user.email)
-    
-    if mailFlag:
-        user[list(user)[-1] + 1] = new_user
-        create_flag = True
-        msg = {"msg": "Add new user succeed.", "user_id": list(user)[-1]}
+    new_user = Users(**user_request.model_dump())
+
+    formatFlag = checkMail(new_user.email)
+    existFlag = checkExist(new_user.name, new_user.email)
+
+    if not existFlag:
+        raise HTTPException(status_code = 409, detail = 'User already exists.')
+
+    if formatFlag:
+        idxN = list(user)[-1] + 1
+        buff = {"name": new_user.name, "email": new_user.email, "activate": True}
+        user[idxN] = buff
+        msg = {"msg": "Add new user succeed.", "user_id": idxN}
+        print(msg)
         return msg
     else:
-        raise  HTTPException(status_code = 400, detail='Wrong input parameters.')
+        raise HTTPException(status_code = 400, detail = 'Wrong input parameters.')
 
-@app.put("/updateuser/{user_id}", status_code = status.HTTP_200_OK)
+@app.put("/user/{user_id}", status_code = status.HTTP_200_OK)
 async def update_user(update_user: UserRequest, user_id: int):
     msg = {}
-    mailFlag = checkMail(update_user.email)
-
-    if (user_id <= 0) or (not mailFlag):
-        raise HTTPException(status_code = 400, detail = 'Wrong input parameters.')
+    existFlag = (user_id in user) and (user[user_id]["activate"] == True)
+    if existFlag:
+        user[user_id]["name"] = update_user.name
+        user[user_id]["email"] = update_user.email
+        msg = {"msg": "Update user " + str(user_id) + " data succeed."}
+        return msg
     else:
-        info_changed = False
-        for i in user:
-            if i == user_id:
-                user[i] = update_user
-                info_changed = True
-                break
-        if not info_changed:
-            raise HTTPException(status_code = 404, detail = 'User not exist.')
-        else:
-            msg = {"msg": "Update user " + str(user_id) + " data succeed."}
-            return msg
+        raise HTTPException(status_code = 404, detail='User not exist.')
 
 
-@app.delete("/deluser/{user_id}", status_code = status.HTTP_200_OK)
+@app.delete("/user/{user_id}", status_code = status.HTTP_200_OK)
 async def delete_user(user_id: int = Path(gt = 0) ):
-    user_deleted = False
+    existFlag = (user_id in user) and (user[user_id]["activate"] == True)
     msg = {}
-    for i in user:
-        if i == user_id:
-            del user[user_id]
-            user_deleted = True
-            break
-            
-    if not user_deleted:
-        raise HTTPException(status_code = 404, detail = 'User not exist.')
-    else:
+
+    if existFlag:
+        user[user_id]["activate"] = False
         msg = {"msg": "Delete user " + str(user_id) + " succeed."}
         return msg
+    else:
+        raise HTTPException(status_code = 404, detail='User not exist.')
