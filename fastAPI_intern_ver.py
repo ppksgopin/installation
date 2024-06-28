@@ -48,6 +48,19 @@ def checkExist(name, mail):
 
     return not checkFlag
 
+
+class CustomException(Exception):
+    def __init__(self, message: str):
+        self.message = message
+
+@app.exception_handler(CustomException)
+async def custom_exception_handler(request: Request, exc: CustomException):
+    if request.method == "DELETE":
+        return JSONResponse(status_code=500, content={"message": f"DELETE operation failed: {exc.message}"})
+    else:
+        return JSONResponse(status_code=500, content={"message": f"An error occurred: {exc.message}"})
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(status_code = status.HTTP_400_BAD_REQUEST, content = {"msg": "Wrong input parameters."})
