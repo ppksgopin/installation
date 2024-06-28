@@ -70,24 +70,19 @@ async def inspect_user_by_id(user_id):
 
 @app.post("/user", status_code = status.HTTP_201_CREATED)
 async def create_user(user_request: UserRequest):
-    try:
-        msg = {}
-        new_user = Users(**user_request.model_dump())
+    msg = {}
+    new_user = Users(**user_request.model_dump())
+    formatFlag = checkMail(new_user.email)
+    existFlag = checkExist(new_user.name, new_user.email)
+    if not existFlag:
+        raise HTTPException(status_code = 409, detail = 'User already exists.')
+    if formatFlag:
+        idxN = list(user)[-1] + 1
+        buff = {"name": new_user.name, "email": new_user.email, "activate": True}
+        user[idxN] = buff
+        msg = {"msg": "Add new user succeed.", "user_id": idxN}
+        return msg
 
-        formatFlag = checkMail(new_user.email)
-        existFlag = checkExist(new_user.name, new_user.email)
-
-        if not existFlag:
-            raise HTTPException(status_code = 409, detail = 'User already exists.')
-
-        if formatFlag:
-            idxN = list(user)[-1] + 1
-            buff = {"name": new_user.name, "email": new_user.email, "activate": True}
-            user[idxN] = buff
-            msg = {"msg": "Add new user succeed.", "user_id": idxN}
-            return msg
-    except:
-        raise HTTPException(status_code = 500, detail = 'Add new user failed.')
 
 @app.put("/user/{user_id}", status_code = status.HTTP_200_OK)
 async def update_user(update_user: UserRequest, user_id: int):
