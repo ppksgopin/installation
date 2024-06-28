@@ -66,52 +66,61 @@ async def inspect_user_by_id(user_id):
             else:
                 raise HTTPException(status_code = 404, detail = 'User not exist.')
     else:
-        raise HTTPException(status_code=400, detail='Wrong user id type.')
+        raise HTTPException(status_code=400, detail = 'Wrong user id type.')
 
 @app.post("/user", status_code = status.HTTP_201_CREATED)
 async def create_user(user_request: UserRequest):
-    msg = {}
-    new_user = Users(**user_request.model_dump())
+    try:
+        msg = {}
+        new_user = Users(**user_request.model_dump())
 
-    formatFlag = checkMail(new_user.email)
-    existFlag = checkExist(new_user.name, new_user.email)
+        formatFlag = checkMail(new_user.email)
+        existFlag = checkExist(new_user.name, new_user.email)
 
-    if not existFlag:
-        raise HTTPException(status_code = 409, detail = 'User already exists.')
+        if not existFlag:
+            raise HTTPException(status_code = 409, detail = 'User already exists.')
 
-    if formatFlag:
-        idxN = list(user)[-1] + 1
-        buff = {"name": new_user.name, "email": new_user.email, "activate": True}
-        user[idxN] = buff
-        msg = {"msg": "Add new user succeed.", "user_id": idxN}
-        return msg
+        if formatFlag:
+            idxN = list(user)[-1] + 1
+            buff = {"name": new_user.name, "email": new_user.email, "activate": True}
+            user[idxN] = buff
+            msg = {"msg": "Add new user succeed.", "user_id": idxN}
+            return msg
+    except:
+        raise HTTPException(status_code = 500, detail = 'Add new user failed.')
 
 @app.put("/user/{user_id}", status_code = status.HTTP_200_OK)
 async def update_user(update_user: UserRequest, user_id: int):
-    msg = {}    
-    existFlag = (user_id in user) and (user[user_id]["activate"] == True)
+    try:
+        msg = {}    
+        existFlag = (user_id in user) and (user[user_id]["activate"] == True)
 
-    if existFlag:
-        if len(update_user.name) != 0:
-            user[user_id]["name"] = update_user.name
-        if len(update_user.email) != 0:
-            if checkMail(update_user.email):
-                user[user_id]["email"] = update_user.email
-            else:
-                raise HTTPException(status_code = 400, detail = 'Wrong email foramt.')
-        msg = {"msg": "Update user " + str(user_id) + " data succeed."}
-        return msg
-    else:
-        raise HTTPException(status_code = 404, detail='User not exist.')
+        if existFlag:
+            if len(update_user.name) != 0:
+                user[user_id]["name"] = update_user.name
+            if len(update_user.email) != 0:
+                if checkMail(update_user.email):
+                    user[user_id]["email"] = update_user.email
+                else:
+                    raise HTTPException(status_code = 400, detail = 'Wrong email foramt.')
+            msg = {"msg": "Update user " + str(user_id) + " data succeed."}
+            return msg
+        else:
+            raise HTTPException(status_code = 404, detail='User not exist.')
+    except:
+        raise HTTPException(status_code = 500, detail = 'Update user ' + str(user_id) + ' failed.')
 
 @app.delete("/user/{user_id}", status_code = status.HTTP_200_OK)
 async def delete_user(user_id: int = Path(gt = 0) ):
-    existFlag = (user_id in user) and (user[user_id]["activate"] == True)
-    msg = {}
+    try:
+        existFlag = (user_id in user) and (user[user_id]["activate"] == True)
+        msg = {}
 
-    if existFlag:
-        user[user_id]["activate"] = False
-        msg = {"msg": "Delete user " + str(user_id) + " succeed."}
-        return msg
-    else:
-        raise HTTPException(status_code = 404, detail='User not exist.')
+        if existFlag:
+            user[user_id]["activate"] = False
+            msg = {"msg": "Delete user " + str(user_id) + " succeed."}
+            return msg
+        else:
+            raise HTTPException(status_code = 404, detail = 'User not exist.')
+    except:
+        raise HTTPException(status_code = 500, detail = 'Delete user ' + str(user_id) + ' failed.')
