@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 import re
 
 app = FastAPI()
+global userID
 
 class Users:
     name: str
@@ -48,22 +49,25 @@ def checkExist(name, mail):
 
     return not checkFlag
 
-
-class CustomException(Exception):
-    def __init__(self, message: str):
-        self.message = message
-
-@app.exception_handler(CustomException)
-async def custom_exception_handler(request: Request, exc: CustomException):
-    if request.method == "DELETE":
-        return JSONResponse(status_code=500, content={"message": f"DELETE operation failed: {exc.message}"})
-    else:
-        return JSONResponse(status_code=500, content={"message": f"An error occurred: {exc.message}"})
-
-
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return JSONResponse(status_code = status.HTTP_400_BAD_REQUEST, content = {"msg": "Wrong input parameters."})
+async def custom_exception_handler(request: Request, exc: RequestValidationError):
+    if request.method == "POST":
+        if 'Field required' in str(exc):
+            return JSONResponse(status_code=400, content={"msg": "Wrong input parameters."})
+        else:
+            return JSONResponse(status_code=500, content={"msg": "Add new user failed."})
+
+    if request.method == "DELETE":
+        if 'Input should be a valid integer' in str(exc):
+            return JSONResponse(status_code=400, content={"msg": "Wrong input parameters."})
+        else:
+            return JSONResponse(status_code = 500, content={"msg": "Delete user " + str(userID) + " failed."})
+    
+    if request.method == "PUT":
+        if ('Field required' in str(exc)) or ('Input should be a valid integer' in str(exc)):
+            return JSONResponse(status_code=400, content={"msg": "Wrong input parameters."})
+        else:
+            return JSONResponse(status_code = 500, content={"msg": "Update user " + str(userID) + " failed."})
 
 
 @app.get("/user/{user_id}", status_code = status.HTTP_200_OK)
@@ -97,14 +101,15 @@ async def create_user(user_request: UserRequest):
                 msg = {"msg": "Add new user succeed.", "user_id": idxN}
                 return msg
             else:
-                raise HTTPException(status_code=409, detail = 'User/mail already exists.')
+                raise HTTPException(status_code = 409, detail = 'User/mail already exists.')
         else:
-            raise HTTPException(status_code=400, detail = 'Wrong input email')
+            raise HTTPException(status_code = 400, detail = 'Wrong input email')
     else:
-        raise HTTPException(status_code=400, detail = 'Wrong input parameters.')
+        raise HTTPException(status_code = 400, detail = 'Wrong input parameters.')
 
 @app.put("/user/{user_id}", status_code = status.HTTP_200_OK)
 async def update_user(update_user: UserRequest, user_id: int):
+    userID = user_id    
     msg = {}    
     existFlag = (user_id in user) and (user[user_id]["activate"] == True)
 
@@ -112,6 +117,7 @@ async def update_user(update_user: UserRequest, user_id: int):
         if len(update_user.name) != 0:
             user[user_id]["name"] = update_user.name
         if len(update_user.email) != 0:
+
             if checkMail(update_user.email):
                 user[user_id]["email"] = update_user.email
             else:
@@ -124,8 +130,11 @@ async def update_user(update_user: UserRequest, user_id: int):
 
 @app.delete("/user/{user_id}", status_code = status.HTTP_200_OK)
 async def delete_user(user_id: int = Path(gt = 0) ):
+    userID = user_id
     existFlag = (user_id in user) and (user[user_id]["activate"] == True)
     msg = {}
+
+    print(userID)
 
     if existFlag:
         user[user_id]["activate"] = False
