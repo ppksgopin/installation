@@ -5,7 +5,6 @@ RUN pip install fastapi uvicorn
 RUN apt-get update -y && apt-get install tzdata
  
 COPY fastAPI_intern_ver.py /run
-
 WORKDIR /run
 ENV TZ = "Asia/Taipei"
 
