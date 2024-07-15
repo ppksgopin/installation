@@ -8,8 +8,8 @@ dnf install -y yum-utils
 dnf install -y docker-ce docker-ce-cli containerd.io
 systemctl start docker && sudo systemctl enable --now docker
 
+dnf install epel-release
 dnf install ntfs-3g -y
 
-sudo dnf install epel-release -y
 sudo dnf install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-9.noarch.rpm -y
 sudo yum install vlc -y
