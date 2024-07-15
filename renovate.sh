@@ -22,4 +22,4 @@ nmcli conn add type bridge autoconnect no con-name kvmbr0 ifname kvmbr0
 nmcli conn modify kvmbr0 ipv4.address 192.168.1.179/24 gw4 192.168.1.1 ipv4.method manual
 nmcli conn add type bridge-slave autoconnect yes con-name enp0s3 ifname enp0s3 master kvmbr0
 
-echo "Test done."
+reboot
