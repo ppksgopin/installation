@@ -4,15 +4,15 @@ dnf install {kernel-headers,kernel-devel} -y
 dnf update -y
 
 dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
-dnf install -y yum-utils
-dnf install -y docker-ce docker-ce-cli containerd.io
+dnf install yum-utils -y
+dnf install docker-ce docker-ce-cli containerd.io -y
 systemctl start docker && sudo systemctl enable --now docker
 
-dnf install epel-release
+dnf install epel-release -y
 dnf install ntfs-3g -y
 
 sudo dnf install https://download1.rpmfusion.org/free/el/rpmfusion-free-release-9.noarch.rpm -y
-sudo yum install vlc -y
+sudo dnf install vlc -y
 
 dnf install {virt-install,virt-viewer,libvirt,virt-manager,virt-top,libguestfs-tools} -y
 systemctl start libvirtd && systemctl enable --now libvirtd
