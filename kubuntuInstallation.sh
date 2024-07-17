@@ -1,6 +1,6 @@
-
+#!/bin/bash
 apt-get update -y && apt-get upgrade -y
-apt-get install ibus-chewing
+apt-get install ibus-chewing -y
 
 install -d -m 0755 /etc/apt/keyrings
 wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O- | tee /etc/apt/keyrings/packages.mozilla.org.asc > /dev/null
@@ -22,6 +22,7 @@ echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
   $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
+apt-get update -y && apt-get upgrade -y
 apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
 systemctl start docker && systemctl enable --now docker
 apt-get update -y && apt-get upgrade -y
@@ -34,4 +35,4 @@ nmcli conn modify kvmbr0 ipv4.address 192.168.1.179/24 gw4 192.168.1.1 ipv4.meth
 nmcli conn add type bridge-slave autoconnect yes con-name enp0s3 ifname enp0s3 master kvmbr0
 
 apt-get update -y && apt-get upgrade -y
-echo "Done."
+reboot
