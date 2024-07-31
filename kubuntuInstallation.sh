@@ -35,7 +35,7 @@ nmcli conn modify kvmbr0 ipv4.address 192.168.1.179/24 gw4 192.168.1.1 ipv4.meth
 nmcli conn add type bridge-slave autoconnect yes con-name enp0s3 ifname enp0s3 master kvmbr0
 
 apt-get update -y && apt-get upgrade -y
-apt install gdebi
+apt install gdebi -y
 wget https://zoom.us/download?os=linux
 apt install ./zoom_amd64.deb
 
